@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
+import { Auth0Provider, useAuth0 } from "@auth0/auth0-react";
 import "./App.css";
 
-function App() {
+const Messages = () => {
   const [messages, setMessages] = useState<string[]>([]);
   const [newMessage, setNewMessage] = useState("");
 
@@ -62,6 +63,50 @@ function App() {
       </form>
     </>
   );
-}
+};
 
-export default App;
+const App = () => {
+  const { loginWithRedirect, logout, isAuthenticated } = useAuth0();
+
+  return (
+    <div>
+      {!isAuthenticated ? (
+        <button onClick={() => loginWithRedirect()}>Log In</button>
+      ) : (
+        <>
+          <button onClick={() => logout()}>Log Out</button>
+          <Messages />
+        </>
+      )}
+    </div>
+  );
+};
+
+const Auth0ProviderWithHistory = ({
+  children,
+}: {
+  children: React.ReactNode;
+}) => {
+  const domain = import.meta.env.VITE_AUTH0_DOMAIN;
+  const clientId = import.meta.env.VITE_AUTH0_CLIENT_ID;
+
+  return (
+    <Auth0Provider
+      domain={domain}
+      clientId={clientId}
+      authorizationParams={{
+        redirect_uri: window.location.origin,
+      }}
+    >
+      {children}
+    </Auth0Provider>
+  );
+};
+
+const RootApp = () => (
+  <Auth0ProviderWithHistory>
+    <App />
+  </Auth0ProviderWithHistory>
+);
+
+export default RootApp;
